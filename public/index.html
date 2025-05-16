@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Pay with Paystack</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input[type="email"],
+    input[type="number"] {
+      width: 95%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: 0.2s ease-in-out;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #0aa83f;
+      box-shadow: 0 0 4px rgba(10, 168, 63, 0.3);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0aa83f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #088e35;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Paystack Payment Form</h2>
+    <form id="paymentForm">
+      <input type="email" id="email" placeholder="Enter your email" required />
+      <input type="number" id="amount" placeholder="Amount (NGN)" required /><br><br>
+      <button type="submit">Pay Now</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('paymentForm');
+    form.addEventListener('submit', payWithPaystack);
+
+    function payWithPaystack(e) {
+      e.preventDefault();
+
+      let email = document.getElementById("email").value;
+      let amount = document.getElementById("amount").value * 100;
+      let reference = 'PSK_' + Date.now();
+
+      let handler = PaystackPop.setup({
+        key: 'pk_test_cf8507e7fdcc31f918417b893708ac23e3e94729',
+        email: email,
+        amount: amount,
+        ref: reference,
+        callback: function(response) {
+          alert('Payment complete! Ref: ' + response.reference);
+          verifyPayment(response.reference);
+        },
+        onClose: function() {
+          alert('Transaction cancelled.');
+        }
+      });
+
+      handler.openIframe();
+    }
+
+    function verifyPayment(reference) {
+      fetch('/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reference: reference })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        alert(data.message);
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Verification failed.');
+      });
+    }
+  </script>
+</body>
+</html>
